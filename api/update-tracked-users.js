@@ -19,6 +19,7 @@ export default async function handler(req, res) {
     // Add wallet addresses to existing users
     const walletMap = {
       'abIenessy': 'A1nQejA73NRszZ5t2dQH4hoNnW33LwLbLYHv6XbQBhC4',
+      'booleansolana': 'A1nQejA73NRszZ5t2dQH4hoNnW33LwLbLYHv6XbQBhC4',
       'samir_chebbo': 'Ba7S9Se73oeFR5ePhu9f1MoTP7b8xBdxTpz1eWBFBv2s'
     };
 
