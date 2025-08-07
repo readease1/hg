@@ -1,4 +1,4 @@
-// /api/lib/storage.js - Redis-based storage for tracking data
+// /api/lib/storage-v2.js - Updated storage for username tracking
 class Storage {
   constructor() {
     this.baseUrl = process.env.KV_REST_API_URL;
@@ -17,7 +17,6 @@ class Storage {
     };
 
     if (data !== null) {
-      // For Redis REST API, we need to send the data directly, not JSON.stringify it again
       options.body = typeof data === 'string' ? JSON.stringify(data) : JSON.stringify(data);
     }
 
@@ -58,24 +57,18 @@ class Storage {
   }
 
   async sadd(key, member) {
-    // For Redis sets, we need to send the member as a string, not JSON
     const url = `${this.baseUrl}/sadd/${encodeURIComponent(key)}`;
-    
     const options = {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify([member]) // Redis SADD expects an array of members
+      body: JSON.stringify([member])
     };
 
     try {
       const response = await fetch(url, options);
-      if (!response.ok) {
-        throw new Error(`Redis SADD failed: ${response.status}`);
-      }
-      
       const result = await response.json();
       return result.result;
     } catch (error) {
@@ -85,24 +78,18 @@ class Storage {
   }
 
   async srem(key, member) {
-    // For Redis sets, we need to send the member as a string, not JSON
     const url = `${this.baseUrl}/srem/${encodeURIComponent(key)}`;
-    
     const options = {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify([member]) // Redis SREM expects an array of members
+      body: JSON.stringify([member])
     };
 
     try {
       const response = await fetch(url, options);
-      if (!response.ok) {
-        throw new Error(`Redis SREM failed: ${response.status}`);
-      }
-      
       const result = await response.json();
       return result.result;
     } catch (error) {
@@ -116,8 +103,8 @@ class Storage {
     return result || [];
   }
 
-  // Add a wallet to a user's tracking list
-  async addTrackedWallet(userId, username, chatId, walletAddress) {
+  // Add a username to a user's tracking list
+  async addTrackedUsername(userId, username, chatId, targetUsername) {
     try {
       // Get user data
       const userKey = `user:${userId}`;
@@ -127,39 +114,39 @@ class Storage {
         userData = {
           username: username,
           chatId: chatId,
-          wallets: [],
+          trackedUsernames: [],
           createdAt: new Date().toISOString()
         };
       } else {
-        // Update chat ID and username in case they changed
         userData.chatId = chatId;
         userData.username = username;
+        if (!userData.trackedUsernames) userData.trackedUsernames = [];
       }
 
-      // Check if wallet is already tracked by this user
-      if (userData.wallets.includes(walletAddress)) {
+      // Check if username is already tracked by this user
+      if (userData.trackedUsernames.includes(targetUsername)) {
         return false; // Already tracking
       }
 
-      // Add wallet to user's list
-      userData.wallets.push(walletAddress);
+      // Add username to user's list
+      userData.trackedUsernames.push(targetUsername);
       await this.set(userKey, userData);
 
-      // Add to wallet's tracker list
-      const walletKey = `wallet:${walletAddress}`;
-      let walletData = await this.get(walletKey);
+      // Add to username's tracker list
+      const usernameKey = `username:${targetUsername}`;
+      let usernameData = await this.get(usernameKey);
       
-      if (!walletData) {
-        walletData = {
+      if (!usernameData) {
+        usernameData = {
           trackers: [],
           addedAt: new Date().toISOString()
         };
       }
 
-      // Add user to wallet's tracker list if not already there
-      const existingTracker = walletData.trackers.find(t => t.userId === userId);
+      // Add user to username's tracker list if not already there
+      const existingTracker = usernameData.trackers.find(t => t.userId === userId);
       if (!existingTracker) {
-        walletData.trackers.push({
+        usernameData.trackers.push({
           userId: userId,
           username: username,
           chatId: chatId,
@@ -167,160 +154,158 @@ class Storage {
         });
       }
 
-      await this.set(walletKey, walletData);
+      await this.set(usernameKey, usernameData);
 
-      // Add to global tracked wallets set
-      await this.sadd('tracked_wallets', walletAddress);
+      // Add to global tracked usernames set
+      await this.sadd('tracked_usernames', targetUsername);
 
-      console.log(`✅ Added wallet ${walletAddress} for user ${username}`);
+      console.log(`✅ Added username @${targetUsername} for user ${username}`);
       return true;
 
     } catch (error) {
-      console.error('Error adding tracked wallet:', error);
+      console.error('Error adding tracked username:', error);
       return false;
     }
   }
 
-  // Remove a wallet from a user's tracking list
-  async removeTrackedWallet(userId, walletAddress) {
+  // Remove a username from a user's tracking list
+  async removeTrackedUsername(userId, targetUsername) {
     try {
       // Get user data
       const userKey = `user:${userId}`;
       const userData = await this.get(userKey);
       
-      if (!userData || !userData.wallets) {
-        return false; // User doesn't exist or has no wallets
+      if (!userData || !userData.trackedUsernames) {
+        return false;
       }
 
-      const walletIndex = userData.wallets.indexOf(walletAddress);
-      if (walletIndex === -1) {
-        return false; // Wallet not in user's list
+      const usernameIndex = userData.trackedUsernames.indexOf(targetUsername);
+      if (usernameIndex === -1) {
+        return false;
       }
 
-      // Remove wallet from user's list
-      userData.wallets.splice(walletIndex, 1);
+      // Remove username from user's list
+      userData.trackedUsernames.splice(usernameIndex, 1);
       await this.set(userKey, userData);
 
-      // Update wallet's tracker list
-      const walletKey = `wallet:${walletAddress}`;
-      const walletData = await this.get(walletKey);
+      // Update username's tracker list
+      const usernameKey = `username:${targetUsername}`;
+      const usernameData = await this.get(usernameKey);
       
-      if (walletData && walletData.trackers) {
-        walletData.trackers = walletData.trackers.filter(t => t.userId !== userId);
+      if (usernameData && usernameData.trackers) {
+        usernameData.trackers = usernameData.trackers.filter(t => t.userId !== userId);
         
-        if (walletData.trackers.length === 0) {
-          // No one tracking this wallet anymore
-          await this.del(walletKey);
-          await this.srem('tracked_wallets', walletAddress);
+        if (usernameData.trackers.length === 0) {
+          // No one tracking this username anymore
+          await this.del(usernameKey);
+          await this.srem('tracked_usernames', targetUsername);
         } else {
-          await this.set(walletKey, walletData);
+          await this.set(usernameKey, usernameData);
         }
       }
 
-      console.log(`✅ Removed wallet ${walletAddress} for user ${userId}`);
+      console.log(`✅ Removed username @${targetUsername} for user ${userId}`);
       return true;
 
     } catch (error) {
-      console.error('Error removing tracked wallet:', error);
+      console.error('Error removing tracked username:', error);
       return false;
     }
   }
 
-  // Get all wallets tracked by a user
-  async getUserWallets(userId) {
+  // Get all usernames tracked by a user
+  async getUserTrackedUsernames(userId) {
     try {
       const userKey = `user:${userId}`;
       const userData = await this.get(userKey);
       
-      console.log(`Getting wallets for user ${userId}:`, userData);
-      
-      if (!userData || !userData.wallets) {
+      if (!userData || !userData.trackedUsernames) {
         return [];
       }
 
-      return userData.wallets;
+      return userData.trackedUsernames;
     } catch (error) {
-      console.error('Error getting user wallets:', error);
+      console.error('Error getting user tracked usernames:', error);
       return [];
     }
   }
 
-  // Get all tracked wallets (for monitoring)
-  async getAllTrackedWallets() {
+  // Get all tracked usernames (for monitoring)
+  async getAllTrackedUsernames() {
     try {
-      const wallets = await this.smembers('tracked_wallets');
-      return wallets || [];
+      const usernames = await this.smembers('tracked_usernames');
+      // Clean up any malformed entries
+      return usernames.filter(u => u && typeof u === 'string' && !u.includes('[') && !u.includes('"'));
     } catch (error) {
-      console.error('Error getting all tracked wallets:', error);
+      console.error('Error getting all tracked usernames:', error);
       return [];
     }
   }
 
-  // Get all trackers for a specific wallet
-  async getWalletTrackers(walletAddress) {
+  // Get all trackers for a specific username
+  async getUsernameTrackers(targetUsername) {
     try {
-      const walletKey = `wallet:${walletAddress}`;
-      const walletData = await this.get(walletKey);
+      const usernameKey = `username:${targetUsername}`;
+      const usernameData = await this.get(usernameKey);
       
-      if (!walletData || !walletData.trackers) {
+      if (!usernameData || !usernameData.trackers) {
         return [];
       }
 
-      return walletData.trackers;
+      return usernameData.trackers;
     } catch (error) {
-      console.error('Error getting wallet trackers:', error);
+      console.error('Error getting username trackers:', error);
       return [];
     }
   }
 
-  // Update last checked timestamp for a wallet
-  async updateLastChecked(walletAddress, timestamp) {
+  // Update last checked timestamp for a username
+  async updateLastCheckedForUsername(targetUsername, timestamp) {
     try {
-      const key = `last_checked:${walletAddress}`;
+      const key = `last_checked_username:${targetUsername}`;
       await this.set(key, timestamp);
     } catch (error) {
-      console.error('Error updating last checked:', error);
+      console.error('Error updating last checked for username:', error);
     }
   }
 
-  // Get last checked timestamp for a wallet
-  async getLastChecked(walletAddress) {
+  // Get last checked timestamp for a username
+  async getLastCheckedForUsername(targetUsername) {
     try {
-      const key = `last_checked:${walletAddress}`;
+      const key = `last_checked_username:${targetUsername}`;
       const timestamp = await this.get(key);
       return timestamp || 0;
     } catch (error) {
-      console.error('Error getting last checked:', error);
+      console.error('Error getting last checked for username:', error);
       return 0;
     }
   }
 
-  // Get tracking statistics
-  async getStats() {
+  // Track which claims we've already notified about for a username
+  async updateLastNotifiedClaims(targetUsername, tokenAddresses) {
     try {
-      const trackedWallets = await this.getAllTrackedWallets();
-      const totalWallets = trackedWallets.length;
-      
-      // Count users and total tracking relationships
-      let totalUsers = 0;
-      let totalTracking = 0;
-      
-      // This is a simplified count - in a real app you'd want to optimize this
-      const userKeys = []; // We'd need to track user keys separately for efficiency
-      
-      return {
-        totalUsers: totalUsers, // Will be 0 for now - we'd need to track this separately
-        totalWallets: totalWallets,
-        totalTracking: totalTracking // Will be 0 for now
-      };
+      const key = `notified_claims:${targetUsername}`;
+      await this.set(key, tokenAddresses);
     } catch (error) {
-      console.error('Error getting stats:', error);
-      return {
-        totalUsers: 0,
-        totalWallets: 0,
-        totalTracking: 0
-      };
+      console.error('Error updating notified claims:', error);
     }
+  }
+
+  // Get which claims we've already notified about for a username
+  async getLastNotifiedClaims(targetUsername) {
+    try {
+      const key = `notified_claims:${targetUsername}`;
+      const claims = await this.get(key);
+      return claims || [];
+    } catch (error) {
+      console.error('Error getting notified claims:', error);
+      return [];
+    }
+  }
+
+  // Legacy methods for backward compatibility
+  async getUserWallets(userId) {
+    return await this.getUserTrackedUsernames(userId);
   }
 }
 
