@@ -1,4 +1,4 @@
-// /api/telegram-webhook.js - Clean telegram bot
+// /api/telegram-webhook.js - Fixed telegram bot with working storage
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -72,7 +72,16 @@ async function handleTrack(chatId, botToken, args, userId, username) {
   const targetUsername = args[0].replace('@', '');
   
   try {
-    // Get wallet from Bags API
+    // Check if already tracking
+    const currentTrackings = await getTrackings(userId);
+    const alreadyTracking = currentTrackings.some(t => t.targetUsername === targetUsername);
+    
+    if (alreadyTracking) {
+      await sendMessage(chatId, `You are already tracking @${targetUsername}`, botToken);
+      return;
+    }
+    
+    // Get wallet from your API
     const walletResponse = await fetch(`https://hg-beta.vercel.app/api/wallet?username=${targetUsername}`);
     const walletData = await walletResponse.json();
     
@@ -81,11 +90,21 @@ async function handleTrack(chatId, botToken, args, userId, username) {
       return;
     }
     
-    // Store this tracking
-    await storeTracking(userId, username, chatId, targetUsername, walletData.wallet);
+    // Add to trackings
+    const newTracking = {
+      userId,
+      username,
+      chatId,
+      targetUsername,
+      walletAddress: walletData.wallet,
+      addedAt: Date.now()
+    };
+    
+    const updatedTrackings = [...currentTrackings, newTracking];
+    await setTrackings(userId, updatedTrackings);
     
     const shortWallet = `${walletData.wallet.slice(0, 8)}...${walletData.wallet.slice(-8)}`;
-    await sendMessage(chatId, `Now tracking @${targetUsername}\nWallet: ${shortWallet}\n\nYou'll get alerts when they claim fees!`, botToken);
+    await sendMessage(chatId, `✅ Now tracking @${targetUsername}\nWallet: ${shortWallet}\n\nYou'll get alerts when they claim fees!`, botToken);
     
   } catch (error) {
     console.error('Track error:', error);
@@ -102,9 +121,10 @@ async function handleList(chatId, botToken, userId) {
       return;
     }
     
-    let message = `Your tracked users (${trackings.length}):\n\n`;
+    let message = `📋 Your tracked users (${trackings.length}):\n\n`;
     trackings.forEach((tracking, index) => {
-      message += `${index + 1}. @${tracking.targetUsername}\n`;
+      const shortWallet = `${tracking.walletAddress.slice(0, 6)}...${tracking.walletAddress.slice(-6)}`;
+      message += `${index + 1}. @${tracking.targetUsername}\n   💰 ${shortWallet}\n\n`;
     });
     
     await sendMessage(chatId, message, botToken);
@@ -123,13 +143,17 @@ async function handleUntrack(chatId, botToken, args, userId) {
   const targetUsername = args[0].replace('@', '');
   
   try {
-    const removed = await removeTracking(userId, targetUsername);
+    const currentTrackings = await getTrackings(userId);
+    const filteredTrackings = currentTrackings.filter(t => t.targetUsername !== targetUsername);
     
-    if (removed) {
-      await sendMessage(chatId, `Stopped tracking @${targetUsername}`, botToken);
-    } else {
-      await sendMessage(chatId, `You are not tracking @${targetUsername}`, botToken);
+    if (filteredTrackings.length === currentTrackings.length) {
+      await sendMessage(chatId, `❌ You are not tracking @${targetUsername}`, botToken);
+      return;
     }
+    
+    await setTrackings(userId, filteredTrackings);
+    await sendMessage(chatId, `✅ Stopped tracking @${targetUsername}`, botToken);
+    
   } catch (error) {
     console.error('Untrack error:', error);
     await sendMessage(chatId, 'Error removing tracking.', botToken);
@@ -153,47 +177,77 @@ async function sendMessage(chatId, text, botToken) {
   }
 }
 
-// Simple Redis storage functions
-async function storeTracking(userId, username, chatId, targetUsername, walletAddress) {
-  const tracking = {
-    userId,
-    username, 
-    chatId,
-    targetUsername,
-    walletAddress,
-    addedAt: Date.now()
-  };
-  
-  const REDIS_URL = process.env.KV_REST_API_URL;
-  const REDIS_TOKEN = process.env.KV_REST_API_TOKEN;
-  
-  await fetch(`${REDIS_URL}/set/tracking_${userId}_${targetUsername}`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${REDIS_TOKEN}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(tracking)
-  });
-}
-
+// FIXED: Unified storage system that actually works
 async function getTrackings(userId) {
-  // For simplicity, we'll scan for keys (in production, use a set)
-  // This is a simplified approach - in production you'd track keys differently
-  return [];
+  try {
+    const REDIS_URL = process.env.KV_REST_API_URL;
+    const REDIS_TOKEN = process.env.KV_REST_API_TOKEN;
+
+    const response = await fetch(`${REDIS_URL}/get/user_trackings_${userId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${REDIS_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      console.log(`No trackings found for user ${userId}`);
+      return [];
+    }
+
+    const result = await response.json();
+    
+    if (result.result && result.result !== null) {
+      try {
+        let trackings = result.result;
+        
+        // Handle potential double-encoding
+        if (typeof trackings === 'string') {
+          trackings = JSON.parse(trackings);
+        }
+        
+        // Ensure it's an array
+        if (Array.isArray(trackings)) {
+          console.log(`Found ${trackings.length} trackings for user ${userId}`);
+          return trackings;
+        }
+      } catch (parseError) {
+        console.error('Error parsing trackings:', parseError);
+      }
+    }
+    
+    return [];
+    
+  } catch (error) {
+    console.error('Error getting trackings:', error);
+    return [];
+  }
 }
 
-async function removeTracking(userId, targetUsername) {
-  const REDIS_URL = process.env.KV_REST_API_URL;
-  const REDIS_TOKEN = process.env.KV_REST_API_TOKEN;
-  
-  await fetch(`${REDIS_URL}/del/tracking_${userId}_${targetUsername}`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${REDIS_TOKEN}`,
-      'Content-Type': 'application/json'
+async function setTrackings(userId, trackings) {
+  try {
+    const REDIS_URL = process.env.KV_REST_API_URL;
+    const REDIS_TOKEN = process.env.KV_REST_API_TOKEN;
+
+    console.log(`Storing ${trackings.length} trackings for user ${userId}`);
+
+    const response = await fetch(`${REDIS_URL}/set/user_trackings_${userId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${REDIS_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(trackings) // Store as JSON directly
+    });
+
+    if (response.ok) {
+      console.log(`✅ Successfully stored trackings for user ${userId}`);
+    } else {
+      console.error(`❌ Failed to store trackings: ${response.status}`);
     }
-  });
-  
-  return true;
+    
+  } catch (error) {
+    console.error('Error setting trackings:', error);
+  }
 }
