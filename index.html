@@ -234,6 +234,60 @@ body::before {
             left: -100%;
         }
 
+        /* Custom tooltip styling to match site theme */
+.custom-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.custom-tooltip .tooltiptext {
+    visibility: hidden;
+    opacity: 0;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    color: #ffffff;
+    text-align: center;
+    border-radius: 8px;
+    padding: 8px 12px;
+    position: absolute;
+    z-index: 1001;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+    border: 1px solid rgba(124, 119, 198, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.custom-tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.95) transparent transparent transparent;
+}
+
+.custom-tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Responsive tooltip positioning */
+@media (max-width: 768px) {
+    .custom-tooltip .tooltiptext {
+        margin-left: -80px;
+        font-size: 0.7rem;
+        padding: 6px 10px;
+    }
+}
+
         /* Loading state */
         .loading {
             display: none;
@@ -1121,7 +1175,7 @@ body::before {
         </div>
     `;
 
-    // Helper function to format dates with exact time and hover tooltip
+    // Helper function to format dates with exact time and custom tooltip
     const formatDate = (date) => {
         const now = new Date();
         const diffMs = now - date;
@@ -1155,7 +1209,10 @@ body::before {
             relativeTime = years === 1 ? '1 year ago' : `${years} years ago`;
         }
         
-        return `<span title="${exactTime}" style="cursor: help; border-bottom: 1px dotted #a0a0a0;">${relativeTime}</span>`;
+        return `<span class="custom-tooltip" style="cursor: help; border-bottom: 1px dotted #7c77c6;">
+                    ${relativeTime}
+                    <span class="tooltiptext">${exactTime}</span>
+                </span>`;
     };
 
     if (hasClaimed && allClaims.length > 0) {
