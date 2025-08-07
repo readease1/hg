@@ -141,7 +141,21 @@ async function getTrackedUsers() {
     
     if (result.result && result.result !== null) {
       try {
-        users = JSON.parse(result.result);
+        // Handle both single and double-encoded JSON
+        let parsedResult = result.result;
+        
+        // If it's a string, parse it once
+        if (typeof parsedResult === 'string') {
+          parsedResult = JSON.parse(parsedResult);
+        }
+        
+        // If it's still a string, parse again (double-encoded)
+        if (typeof parsedResult === 'string') {
+          parsedResult = JSON.parse(parsedResult);
+        }
+        
+        users = parsedResult;
+        
         // Ensure it's an array
         if (!Array.isArray(users)) {
           console.log('Users is not an array, resetting to empty array');
@@ -167,13 +181,14 @@ async function setTrackedUsers(users) {
     const REDIS_URL = process.env.KV_REST_API_URL;
     const REDIS_TOKEN = process.env.KV_REST_API_TOKEN;
 
+    // Store directly as JSON, not double-encoded
     await fetch(`${REDIS_URL}/set/simple_tracked_users`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${REDIS_TOKEN}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(JSON.stringify(users))
+      body: JSON.stringify(users) // Single encoding only
     });
   } catch (error) {
     console.error('Error setting tracked users:', error);
