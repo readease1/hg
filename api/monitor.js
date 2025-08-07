@@ -149,9 +149,22 @@ async function checkWalletForClaims(walletAddress) {
       
       if (!transaction || !meta || meta.err) continue;
       
-      // Check if involves fee program
+      // CRITICAL: Check if wallet is signer & fee payer (like website does)
       const accountKeys = transaction.message.accountKeys;
-      const involvesFeeProgram = accountKeys.includes(FEE_PROGRAM);
+      const firstAccount = accountKeys[0]; // Signer & fee payer
+      
+      if (firstAccount !== walletAddress) {
+        // This wallet is not the signer - skip this transaction
+        continue;
+      }
+      
+      console.log(`✅ Wallet IS signer & fee payer in ${sig.signature}`);
+      
+      // Check if involves fee program
+      const involvesFeeProgram = accountKeys.includes(FEE_PROGRAM) ||
+        transaction.message.instructions.some(inst => 
+          accountKeys[inst.programIdIndex] === FEE_PROGRAM
+        );
       
       if (!involvesFeeProgram) continue;
       
