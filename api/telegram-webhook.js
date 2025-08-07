@@ -1,4 +1,4 @@
-// /api/telegram-webhook.js - Simple tracking version
+// /api/telegram-webhook.js - Fixed version with no Markdown parsing issues
 import { addTrackedUser, removeTrackedUser, getUserTrackedUsernames } from './simple-monitor.js';
 
 export default async function handler(req, res) {
@@ -59,11 +59,11 @@ async function handleMessage(message, botToken) {
         break;
 
       case '/whoami':
-        await sendMessage(chatId, `Your Telegram User ID: \`${userId}\`\nChat ID: \`${chatId}\`\nUsername: @${username}`, botToken);
+        await sendMessage(chatId, `Your Telegram User ID: ${userId}\nChat ID: ${chatId}\nUsername: @${username}`, botToken);
         break;
         
       default:
-        await sendMessage(chatId, '❓ Unknown command. Use /help to see available commands.', botToken);
+        await sendMessage(chatId, 'Unknown command. Use /help to see available commands.', botToken);
     }
   } else {
     await sendMessage(chatId, 'Send /help to see available commands.', botToken);
@@ -71,55 +71,55 @@ async function handleMessage(message, botToken) {
 }
 
 async function sendStartMessage(chatId, botToken, username) {
-  const message = `🎉 Welcome to Bags Fee Tracker, @${username}!
+  const message = `Welcome to Bags Fee Tracker, @${username}!
 
-🔍 Track Twitter users and get instant alerts when they claim fees from Bags.fm tokens.
+Track Twitter users and get instant alerts when they claim fees from Bags.fm tokens.
 
-📋 **Commands:**
+Commands:
 /track <username> - Start tracking a Twitter user
 /untrack <username> - Stop tracking a user  
 /list - Show your tracked users
 /help - Show this help message
 
-💡 **Example:**
-\`/track dev714\`
+Example:
+/track dev714
 
-🚀 Built by @devclaimbags | Visit devclaimbags.fm`;
+Built by @devclaimbags | Visit devclaimbags.fm`;
 
   await sendMessage(chatId, message, botToken);
 }
 
 async function sendHelpMessage(chatId, botToken) {
-  const message = `🆘 **Bags Fee Tracker Commands**
+  const message = `Bags Fee Tracker Commands
 
-🔍 **Tracking:**
+Tracking:
 /track <username> - Start tracking Twitter user
 /untrack <username> - Stop tracking user
 /list - Show all your tracked users
 
-📊 **Info:**
+Info:
 /help - Show this help message
 
-💡 **Examples:**
-\`/track dev714\`
-\`/track abIenessy\`
-\`/untrack dev714\`
+Examples:
+/track dev714
+/track abIenessy
+/untrack dev714
 
-🔗 Visit devclaimbags.fm for web interface`;
+Visit devclaimbags.fm for web interface`;
 
   await sendMessage(chatId, message, botToken);
 }
 
 async function handleTrackCommand(chatId, botToken, args, userId, username) {
   if (args.length === 0) {
-    await sendMessage(chatId, '❌ Please provide a Twitter username.\n\nExample: `/track dev714`', botToken);
+    await sendMessage(chatId, 'Please provide a Twitter username.\n\nExample: /track dev714', botToken);
     return;
   }
 
   const targetUsername = args[0].replace('@', '');
   
   if (!isValidTwitterUsername(targetUsername)) {
-    await sendMessage(chatId, '❌ Invalid Twitter username. Please check and try again.\n\nExample: `/track dev714`', botToken);
+    await sendMessage(chatId, 'Invalid Twitter username. Please check and try again.\n\nExample: /track dev714', botToken);
     return;
   }
 
@@ -128,33 +128,34 @@ async function handleTrackCommand(chatId, botToken, args, userId, username) {
     const walletResponse = await fetch(`https://hg-beta.vercel.app/api/wallet?username=${targetUsername}`);
     
     if (!walletResponse.ok) {
-      await sendMessage(chatId, `❌ Unable to check @${targetUsername}. Please try again later.`, botToken);
+      await sendMessage(chatId, `Unable to check @${targetUsername}. Please try again later.`, botToken);
       return;
     }
     
     const walletData = await walletResponse.json();
     
     if (!walletData.success) {
-      await sendMessage(chatId, `❌ @${targetUsername} not found in Bags system. They need to have created tokens on Bags.fm to be trackable.`, botToken);
+      await sendMessage(chatId, `@${targetUsername} not found in Bags system. They need to have created tokens on Bags.fm to be trackable.`, botToken);
       return;
     }
 
     const added = await addTrackedUser(targetUsername, chatId, username);
     
     if (added) {
-      await sendMessage(chatId, `✅ Now tracking Twitter user: @${targetUsername}\n\nYou'll receive alerts when they claim fees!\n\n💰 Wallet: \`${walletData.wallet.slice(0, 8)}...${walletData.wallet.slice(-8)}\``, botToken);
+      const shortWallet = `${walletData.wallet.slice(0, 8)}...${walletData.wallet.slice(-8)}`;
+      await sendMessage(chatId, `Now tracking Twitter user: @${targetUsername}\n\nYou'll receive alerts when they claim fees!\n\nWallet: ${shortWallet}`, botToken);
     } else {
-      await sendMessage(chatId, `ℹ️ Already tracking: @${targetUsername}`, botToken);
+      await sendMessage(chatId, `Already tracking: @${targetUsername}`, botToken);
     }
   } catch (error) {
     console.error('Error adding username:', error);
-    await sendMessage(chatId, '❌ Error adding username to tracking list. Please try again.', botToken);
+    await sendMessage(chatId, 'Error adding username to tracking list. Please try again.', botToken);
   }
 }
 
 async function handleUntrackCommand(chatId, botToken, args, userId, username) {
   if (args.length === 0) {
-    await sendMessage(chatId, '❌ Please provide a Twitter username to untrack.\n\nExample: `/untrack dev714`', botToken);
+    await sendMessage(chatId, 'Please provide a Twitter username to untrack.\n\nExample: /untrack dev714', botToken);
     return;
   }
 
@@ -164,13 +165,13 @@ async function handleUntrackCommand(chatId, botToken, args, userId, username) {
     const removed = await removeTrackedUser(targetUsername, chatId);
     
     if (removed) {
-      await sendMessage(chatId, `✅ Stopped tracking: @${targetUsername}`, botToken);
+      await sendMessage(chatId, `Stopped tracking: @${targetUsername}`, botToken);
     } else {
-      await sendMessage(chatId, `ℹ️ @${targetUsername} not in your tracking list.`, botToken);
+      await sendMessage(chatId, `@${targetUsername} not in your tracking list.`, botToken);
     }
   } catch (error) {
     console.error('Error removing username:', error);
-    await sendMessage(chatId, '❌ Error removing username. Please try again.', botToken);
+    await sendMessage(chatId, 'Error removing username. Please try again.', botToken);
   }
 }
 
@@ -179,11 +180,11 @@ async function handleListCommand(chatId, botToken, userId) {
     const usernames = await getUserTrackedUsernames(chatId);
     
     if (usernames.length === 0) {
-      await sendMessage(chatId, '📭 You are not tracking any users yet.\n\nUse /track <username> to start tracking!', botToken);
+      await sendMessage(chatId, 'You are not tracking any users yet.\n\nUse /track <username> to start tracking!', botToken);
       return;
     }
 
-    let message = `📋 **Your Tracked Users (${usernames.length}):**\n\n`;
+    let message = `Your Tracked Users (${usernames.length}):\n\n`;
     
     usernames.forEach((username, index) => {
       message += `${index + 1}. @${username}\n`;
@@ -194,7 +195,7 @@ async function handleListCommand(chatId, botToken, userId) {
     await sendMessage(chatId, message, botToken);
   } catch (error) {
     console.error('Error listing usernames:', error);
-    await sendMessage(chatId, '❌ Error retrieving tracked users. Please try again.', botToken);
+    await sendMessage(chatId, 'Error retrieving tracked users. Please try again.', botToken);
   }
 }
 
@@ -204,7 +205,6 @@ async function sendMessage(chatId, text, botToken, options = {}) {
   const payload = {
     chat_id: chatId,
     text: text,
-    parse_mode: 'Markdown',
     disable_web_page_preview: true,
     ...options
   };
