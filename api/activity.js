@@ -31,6 +31,54 @@ export default async function handler(req, res) {
     
     console.log(`Using RPC: ${rpcUrl.includes('helius') ? 'Helius' : 'Free Solana RPC'}`);
 
+    // Helper function to get token name using Helius DAS API
+    async function getTokenName(tokenAddress) {
+      try {
+        if (!HELIUS_API_KEY) {
+          console.log('No Helius API key for token metadata lookup');
+          return 'UNKNOWN';
+        }
+
+        console.log(`🏷️ Looking up token name for: ${tokenAddress}`);
+        
+        // Use Helius DAS (Digital Asset Standard) API to get token metadata
+        const response = await fetch(`https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 'token-metadata',
+            method: 'getAsset',
+            params: {
+              id: tokenAddress
+            }
+          })
+        });
+
+        if (!response.ok) {
+          console.log(`Helius DAS API failed: ${response.status}`);
+          return 'UNKNOWN';
+        }
+
+        const data = await response.json();
+        
+        if (data.result && data.result.content && data.result.content.metadata) {
+          const metadata = data.result.content.metadata;
+          const tokenName = metadata.name || metadata.symbol || 'UNKNOWN';
+          console.log(`🎯 Found token name: ${tokenName} for ${tokenAddress}`);
+          return tokenName;
+        } else {
+          console.log(`No metadata found for token ${tokenAddress}`);
+          return 'UNKNOWN';
+        }
+      } catch (error) {
+        console.log(`Error fetching token name: ${error.message}`);
+        return 'UNKNOWN';
+      }
+    }
+
     // Helper function to get token creators from Bags API
     async function getTokenCreators(tokenAddress) {
       try {
@@ -74,7 +122,7 @@ export default async function handler(req, res) {
       try {
         const accountKeys = transaction.message.accountKeys;
         let tokenAddress = null;
-        let tokenName = 'UNKNOWN'; // Default until Bags adds token metadata API
+        let tokenName = 'UNKNOWN';
         
         const COMMON_PROGRAMS = [
           'FEEhPbKVKnco9EXnaY3i4R5rQVUx91wgVfu8qokixywi', // Fee program
@@ -97,12 +145,17 @@ export default async function handler(req, res) {
           }
         }
 
+        // Get token name using Helius if we found a token address
+        if (tokenAddress) {
+          tokenName = await getTokenName(tokenAddress);
+        }
+
         // Get creator information
         const creators = tokenAddress ? await getTokenCreators(tokenAddress) : null;
         
         return {
           address: tokenAddress,
-          name: tokenName, // Will always be "UNKNOWN" until Bags adds metadata API
+          name: tokenName, // Now fetched from Helius instead of hardcoded
           creators: creators
         };
       } catch (error) {
@@ -276,7 +329,7 @@ export default async function handler(req, res) {
               claimTimestamps.push(sig.blockTime);
             }
             
-            // Extract token information from this transaction (including creators)
+            // Extract token information from this transaction (including creators and NAME from Helius)
             const tokenInfo = await extractTokenInfo(transaction, meta);
             console.log(`🪙 Extracted token info:`, tokenInfo);
 
@@ -284,7 +337,7 @@ export default async function handler(req, res) {
               claimTransactions.push(sig.signature);
               allTokenInfo.push({
                 address: tokenInfo.address,
-                name: tokenInfo.name,
+                name: tokenInfo.name, // Now comes from Helius API!
                 transaction: sig.signature,
                 creators: tokenInfo.creators
               });
@@ -352,7 +405,7 @@ export default async function handler(req, res) {
       // Primary claim data
       tokenAddress: primaryClaim?.address || null,
       tokenName: primaryClaim?.name || null,
-      // All unique claims data (now with creators)
+      // All unique claims data (now with real token names from Helius!)
       allClaims: uniqueClaims,
       totalClaims: uniqueClaims.length,
       // User profile info - get from the first creator that matches the searched user
