@@ -515,17 +515,25 @@ body::before {
         }
 
         .contract-address {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 0.75rem;
-            border-radius: 8px;
-            margin: 1rem 0;
-            font-family: 'Monaco', 'Menlo', 'SF Mono', monospace;
-            font-size: 0.8rem;
-            color: #e5e5e5;
-            word-break: break-all;
-            border-left: 3px solid #22c55e;
-            border-right: 3px solid #22c55e;
-        }
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    font-family: 'Monaco', 'Menlo', 'SF Mono', monospace;
+    font-size: 0.8rem;
+    color: #e5e5e5;
+    word-break: break-all;
+    border-left: 3px solid #22c55e;
+    border-right: 3px solid #22c55e;
+    text-align: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.contract-address:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(1.01);
+}
 
         .contract-label {
             color: #a0a0a0;
@@ -535,18 +543,25 @@ body::before {
         }
 
         .wallet-display {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 1rem;
-            border-radius: 12px;
-            margin: 1rem 0;
-            border-left: 4px solid #22c55e;
-            border-right: 4px solid #22c55e;
-            font-family: 'Monaco', 'Menlo', 'SF Mono', monospace;
-            font-size: 0.875rem;
-            word-break: break-all;
-            color: #e5e5e5;
-        }
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border-radius: 12px;
+    margin: 1rem 0;
+    border-left: 4px solid #22c55e;
+    border-right: 4px solid #22c55e;
+    font-family: 'Monaco', 'Menlo', 'SF Mono', monospace;
+    font-size: 0.875rem;
+    word-break: break-all;
+    color: #e5e5e5;
+    text-align: center !important;
+    font-weight: 700 !important;
+    transition: all 0.3s ease;
+}
 
+.wallet-display:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(1.02);
+}
         .link-btn {
             display: inline-flex;
             align-items: center;
@@ -1548,10 +1563,15 @@ Stay vigilant. Trade smart.`;
     typeNextChar();
 }
 
-    function copyToClipboard(text, element) {
+    // Copy to clipboard function
+function copyToClipboard(text, element) {
     navigator.clipboard.writeText(text).then(() => {
         // Show feedback
         const originalText = element.innerHTML;
+        const originalBg = element.style.background;
+        const originalBorderLeft = element.style.borderLeft;
+        const originalBorderRight = element.style.borderRight;
+        
         element.innerHTML = 'Copied!';
         element.style.background = 'rgba(34, 197, 94, 0.2)';
         element.style.borderLeft = '4px solid #22c55e';
@@ -1559,12 +1579,25 @@ Stay vigilant. Trade smart.`;
         
         setTimeout(() => {
             element.innerHTML = originalText;
-            element.style.background = 'rgba(255, 255, 255, 0.05)';
-            element.style.borderLeft = '3px solid #22c55e';
-            element.style.borderRight = '3px solid #22c55e';
+            element.style.background = originalBg;
+            element.style.borderLeft = originalBorderLeft;
+            element.style.borderRight = originalBorderRight;
         }, 1000);
     }).catch(err => {
         console.error('Could not copy text: ', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        const originalText = element.innerHTML;
+        element.innerHTML = 'Copied!';
+        setTimeout(() => {
+            element.innerHTML = originalText;
+        }, 1000);
     });
 }
     </script>
