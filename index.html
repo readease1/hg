@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev Claim Bags?</title>
+    <link rel="icon" type="image/png" href="https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/689437c7dfaa854544093c3d_688eec4a9dc2bb9ca5c7bcdb_bags-icon%20(1).png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f23;
+            color: #ffffff;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        /* Video background */
+.video-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    overflow: hidden;
+}
+
+.video-background video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.8; /* Increased from 0.3 to 0.8 */
+}
+
+/* Lighter overlay for better video visibility */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 15, 35, 0.3); /* Reduced from 0.7 to 0.3 */
+    z-index: -1;
+}
+        /* Header */
+        .header {
+            padding: 2rem 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #7c77c6;
+            margin-right: auto;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: #a0a0a0;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #ffffff;
+        }
+
+        /* Hero section */
+        .hero {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 4rem;
+            padding: 0 2rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff, #7c77c6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: #a0a0a0;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        /* Main container */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        }
+
+        /* Form styling */
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.75rem;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input::placeholder {
+            color: #666666;
+        }
+
+        input:focus {
+            border-color: #7c77c6;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 0 4px rgba(124, 119, 198, 0.1);
+        }
+
+        .input-hint {
+            color: #888888;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #7c77c6, #a855f7);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(124, 119, 198, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        button:disabled:hover::before {
+            left: -100%;
+        }
+
+        /* Loading state */
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 1rem;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #7c77c6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal */
+        .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    overflow: hidden; /* Prevent scrolling */
+}
+
+.modal-overlay.show {
+    opacity: 1;
+}
+
+.modal {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 3rem;
+    max-width: 700px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    overflow-x: hidden; /* No horizontal scroll */
+    position: relative;
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+        .modal-overlay.show .modal {
+            transform: scale(1) translateY(0);
+        }
+
+        /* Custom Scrollbar */
+        .modal::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .modal::-webkit-scrollbar-thumb {
+            background: rgba(124, 119, 198, 0.6);
+            border-radius: 10px;
+        }
+
+        .modal::-webkit-scrollbar-thumb:hover {
+            background: rgba(124, 119, 198, 0.8);
+        }
+
+        .modal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+        }
+
+        .modal.success::before {
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+        }
+
+        .modal.error::before {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: background 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .claim-status {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .claim-status-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .claim-status-icon.success {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 2px solid #22c55e;
+        }
+
+        .claim-status-icon.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 2px solid #ef4444;
+        }
+
+        .claim-status h2 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            color: #ffffff;
+        }
+
+        .claim-status p {
+            color: #a0a0a0;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Modal Tabs */
+        .modal-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-tab {
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            color: #a0a0a0;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .modal-tab.active {
+            color: #ffffff;
+            border-bottom-color: #7c77c6;
+        }
+
+        .modal-tab:hover {
+            color: #ffffff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .token-info {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .token-info:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 200px;
+            text-align: left;
+        }
+
+        .token-info:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+            top: -120px;
+        }
+
+        .tooltip-creators {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .tooltip-creators img {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+
+        .token-name {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .token-details {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .contract-address {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-family: 'Monaco', 'Menlo', 'SF Mono', monospace;
+            font-size: 0.8rem;
+            color: #e5e5e5;
+            word-break: break-all;
+            border-left: 3px solid #22c55e;
+            border-right: 3px solid #22c55e;
+        }
+
+        .contract-label {
+            color: #a0a0a0;
+            font-size: 0.75rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .wallet-display {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            border-left: 4px solid #22c55e;
+            border-right: 4px solid #22c55e;
+            font-family: 'Monaco', 'Menlo', 'SF Mono', monospace;
+            font-size: 0.875rem;
+            word-break: break-all;
+            color: #e5e5e5;
+        }
+
+        .link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .link-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            color: #ffffff;
+        }
+
+        /* Creator Cards */
+        .creator-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .cmd-modal {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    max-width: 700px;
+    width: 90%;
+    max-height: 80vh;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 32px 64px rgba(0, 0, 0, 0.4);
+    position: relative;
+}
+
+.cmd-modal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.cmd-window {
+    background: transparent;
+    color: #ffffff;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.cmd-header {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+    border-radius: 24px 24px 0 0;
+}
+
+.terminal-titlebar {
+    background: transparent;
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.terminal-icon {
+    width: 32px;
+    height: 32px;
+    margin-right: 16px;
+    border-radius: 8px;
+    object-fit: contain;
+}
+
+.terminal-title {
+    flex: 1;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.cmd-body {
+    padding: 2rem;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    color: #e5e5e5;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Custom Scrollbar to match site */
+.cmd-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.cmd-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.cmd-body::-webkit-scrollbar-thumb {
+    background: rgba(124, 119, 198, 0.6);
+    border-radius: 10px;
+}
+
+.cmd-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(124, 119, 198, 0.8);
+}
+
+#cmdOutput {
+    color: #e5e5e5;
+    white-space: pre-line;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.7;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+.cmd-cursor {
+    color: #7c77c6;
+    animation: blink 1s infinite;
+    display: inline-block;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .cmd-modal {
+        width: 95%;
+        max-height: 85vh;
+        border-radius: 16px;
+    }
+    
+    .cmd-header {
+        border-radius: 16px 16px 0 0;
+    }
+    
+    .terminal-titlebar {
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .cmd-body {
+        padding: 1.5rem;
+    }
+    
+    #cmdOutput {
+        font-size: 0.9rem;
+    }
+    
+    .terminal-icon {
+        width: 28px;
+        height: 28px;
+        margin-right: 12px;
+    }
+}
+
+        .creator-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        .creator-info {
+            flex: 1;
+            text-align: left;
+        }
+
+        .creator-name {
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .creator-username {
+            color: #a0a0a0;
+            font-size: 0.875rem;
+        }
+
+        .creator-royalty {
+            color: #7c77c6;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: right;
+        }
+
+        /* Results (hidden, now using modal) */
+        .result {
+            display: none;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 3rem 2rem 2rem;
+            color: #666666;
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .logo {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+
+            .card {
+                padding: 2rem;
+                margin: 0 1rem;
+            }
+
+            .modal {
+                padding: 2rem;
+                width: 95%;
+            }
+
+            
+            .tooltip {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                white-space: normal;
+                max-width: 280px;
+            }
+
+            .token-info:hover .tooltip {
+                top: 50%;
+                transform: translate(-50%, -50%);
+            }
+        }
+    </style>
+    <body>
+        <div class="video-background">
+    <video autoplay muted loop playsinline>
+        <source src="https://res.cloudinary.com/dk4bbapud/video/upload/v1753533985/gen_e5p6zg.mp4" type="video/mp4">
+    </video>
+</div>
+    <div class="header">
+        <nav class="nav">
+            <div class="logo">
+                <img src="https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/689437c7dfaa854544093c3d_688eec4a9dc2bb9ca5c7bcdb_bags-icon%20(1).png" alt="Bags" style="height: 24px; width: auto; margin-right: 8px; vertical-align: middle;">
+                Dev Claim Bags?
+            </div>
+            <div class="nav-links">
+                <a href="#" class="nav-link" onclick="showTelegramModal()">Telegram Bot <span style="font-size: 0.7rem; opacity: 0.7;">ᶜᵒᵐᶦⁿᵍ ˢᵒᵒⁿ</span></a>
+                <a href="#" class="nav-link" onclick="showLarpModal()">LARP Checker</a>
+                <a href="#" class="nav-link" onclick="showAboutModal()">About</a>
+                <a href="https://twitter.com/DevClaim" target="_blank" class="nav-link">Twitter/X</a>
+            </div>
+        </nav>
+
+        <div class="hero">
+    <h1>Did Dev Claim Bags?</h1>
+    <p>Advanced analytics for Bags.fm fee distribution tracking.<br>Be ahead of the game.</p>
+</div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <form id="checkerForm">
+                <div class="form-group">
+                    <label for="twitterUsername">Twitter Username Analysis</label>
+                    <div class="input-container">
+                        <input type="text" id="twitterUsername" placeholder="Enter username (e.g., finnbags)" required value="finnbags">
+                    </div>
+                    <div class="input-hint">
+                        Enter a Twitter username to analyze their Bags fee claiming activity
+                    </div>
+                </div>
+
+                <button type="submit">
+                    <span>Analyze Fee Claims</span>
+                </button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing blockchain data...</p>
+            </div>
+
+            <div class="result" id="result"></div>
+        </div>
+    </div>
+
+    <!-- Main Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modal">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+        <!-- LARP Checker Modal -->
+<div class="modal-overlay" id="larpModalOverlay">
+    <div class="modal" id="larpModal">
+        <button class="modal-close" onclick="closeLarpModal()">×</button>
+        <div id="larpModalContent">
+            <div style="text-align: center; padding: 2rem 0;">
+                <div style="margin-bottom: 1rem;">
+    <img src="https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/68945a7100a3d31d21248d3c_ChatGPT%20Image%20Aug%207%2C%202025%2C%2008_48_59%20AM.png" alt="LARP Checker" style="width: 80px; height: 80px; object-fit: contain;">
+</div>
+                <h2 style="color: #ffffff; margin-bottom: 1rem; font-size: 2rem;">LARP Checker</h2>
+                <p style="color: #a0a0a0; font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;">
+                    AI-powered analysis to detect potential red flags in token launches
+                </p>
+                
+                <form id="larpForm" style="text-align: left;">
+                    <div class="form-group">
+                        <label for="contractAddress">Token Contract Address</label>
+                        <div class="input-container">
+                            <input type="text" id="contractAddress" placeholder="Enter contract address" required>
+                        </div>
+                        <div class="input-hint">
+                            Enter a Bags token contract address to analyze creator & identify any red flags. Twitter Scraper capabilities soon.
+                        </div>
+                    </div>
+                    
+                    <button type="submit" style="width: 100%;">
+                        <span>Analyze Token</span>
+                    </button>
+                </form>
+                
+                <div class="loading" id="larpLoading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>AI analyzing token for red flags...</p>
+                </div>
+                
+                <div id="larpResults" style="display: none; margin-top: 2rem; text-align: left;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <!-- About Modal -->
+<!-- About Modal -->
+<div class="modal-overlay" id="aboutModalOverlay">
+    <div class="modal cmd-modal" id="aboutModal">
+        <div id="aboutModalContent">
+            <div class="cmd-window">
+                <div class="cmd-header">
+                    <div class="terminal-menubar">
+                    </div>
+                    <div class="terminal-titlebar">
+                        <img src="https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/6894605912fbf6897e6d47c1_f7a6dd87b49af8eee0a9ffbd139ecd75%20(1).png" alt="Terminal" class="terminal-icon">
+                        <span class="terminal-title">bags-analytics@mainnet: ~</span>
+                    </div>
+                </div>
+                <div class="cmd-body">
+                    <div id="cmdOutput"></div>
+                    <div class="cmd-cursor">█</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Telegram Bot Modal -->
+    <div class="modal-overlay" id="telegramModalOverlay">
+        <div class="modal" id="telegramModal">
+            <button class="modal-close" onclick="closeTelegramModal()">×</button>
+            <div id="telegramModalContent">
+                <div style="text-align: center; padding: 2rem 0;">
+                    <div style="margin-bottom: 1rem;">
+    <img src="https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/689455801b20533e987b1438_telegram.png" alt="Telegram" style="width: 80px; height: 80px; object-fit: contain;">
+</div>
+                    <h2 style="color: #ffffff; margin-bottom: 1rem; font-size: 2rem;">Telegram Bot Coming Soon!</h2>
+                    <p style="color: #a0a0a0; font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;">
+                        Get instant alerts when developers claim fees from Bags tokens. Stay ahead of the curve with real-time notifications!
+                    </p>
+                    
+                    <!-- Bot preview image -->
+<div style="margin: 2rem 0; text-align: center;">
+    <img src="https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/6894552d821dd89d5175e68f_1faee39b1194aa5654e4a3b511a55626%20(1).png" alt="Telegram Bot Preview" style="max-width: 100%; height: auto; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);">
+</div>
+                    
+                    <div style="background: rgba(34, 197, 94, 0.1); border-radius: 12px; padding: 1.5rem; border-left: 4px solid #22c55e; border-right: 4px solid #22c55e;">
+                        <h3 style="color: #22c55e; margin-bottom: 0.5rem;">Features:</h3>
+                        <ul style="text-align: left; color: #e5e5e5; list-style: none; padding: 0;">
+                            <li style="margin: 0.5rem 0;">• Real-time fee claim notifications</li>
+                            <li style="margin: 0.5rem 0;">• Token creator alerts</li>
+                            <li style="margin: 0.5rem 0;">• Custom watchlists</li>
+                            <li style="margin: 0.5rem 0;">• Direct links to transactions</li>
+                        </ul>
+                    </div>
+                    
+                    <p style="color: #7c77c6; font-weight: 600; margin-top: 2rem;">
+                        Token Gated: 100,000
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Powered by Bags.fm API & Solscan</p>
+    </div>
+</head>
+<script>
+        // Telegram modal functions
+        function showTelegramModal() {
+            const telegramModalOverlay = document.getElementById('telegramModalOverlay');
+            telegramModalOverlay.style.display = 'flex';
+            
+            // Trigger animation
+            setTimeout(() => {
+                telegramModalOverlay.classList.add('show');
+            }, 10);
+        }
+
+        function closeTelegramModal() {
+            const telegramModalOverlay = document.getElementById('telegramModalOverlay');
+            telegramModalOverlay.classList.remove('show');
+            
+            setTimeout(() => {
+                telegramModalOverlay.style.display = 'none';
+            }, 300);
+        }
+
+        // Close telegram modal when clicking overlay
+        document.getElementById('telegramModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTelegramModal();
+            }
+        });
+
+        // Tab switching function
+        function switchTab(tabName) {
+            // Remove active class from all tabs and content
+            document.querySelectorAll('.modal-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding content
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        document.getElementById('checkerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const twitterUsername = document.getElementById('twitterUsername').value.trim();
+            const loadingEl = document.getElementById('loading');
+            const resultEl = document.getElementById('result');
+            const submitBtn = document.querySelector('button[type="submit"]');
+            
+            if (!twitterUsername) {
+                showResult('Please enter a Twitter username', 'error');
+                return;
+            }
+
+            const cleanUsername = twitterUsername.replace('@', '');
+
+            loadingEl.style.display = 'block';
+            resultEl.style.display = 'none';
+            submitBtn.disabled = true;
+
+            try {
+                console.log(`Checking: ${cleanUsername}`);
+                
+                // Step 1: Get wallet address
+                const walletResponse = await fetch(`/api/wallet?username=${encodeURIComponent(cleanUsername)}`);
+                const walletData = await walletResponse.json();
+
+                if (!walletResponse.ok || !walletData.success) {
+                    showResult(`@${cleanUsername} not found in Bags system: ${walletData.error || 'User has no Bags account'}`, 'error');
+                    return;
+                }
+
+                const walletAddress = walletData.wallet;
+                console.log(`Found wallet: ${walletAddress}`);
+
+                // Step 2: Check fee program interactions
+                const activityResponse = await fetch(`/api/activity?wallet=${encodeURIComponent(walletAddress)}&username=${encodeURIComponent(cleanUsername)}`);
+                const activityData = await activityResponse.json();
+
+                console.log('Backend response:', activityData);
+                console.log('All claims data:', activityData.allClaims);
+                console.log('User profile:', activityData.userProfile);
+
+                displayResults(cleanUsername, walletAddress, activityData);
+
+            } catch (error) {
+                console.error('Check error:', error);
+                showResult(`Analysis failed: ${error.message}`, 'error');
+            } finally {
+                loadingEl.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+
+        function displayResults(username, walletAddress, data) {
+    // Use the exact property from backend response
+    const hasClaimed = data.hasInteracted === true;
+    const resultType = hasClaimed ? 'success' : 'error';
+    
+    console.log('Processing display with data:', data);
+    console.log('All claims data:', data.allClaims);
+    console.log('User profile:', data.userProfile);
+    console.log('Claim metrics:', data.claimMetrics);
+    
+    // Use real data from backend
+    const allClaims = data.allClaims || [];
+    const totalClaims = data.totalClaims || 0;
+    const userProfile = data.userProfile;
+    
+    // Create user avatar HTML
+    let userAvatarHtml = '';
+    if (userProfile && userProfile.pfp) {
+        userAvatarHtml = `<img src="${userProfile.pfp}" alt="${username}" class="user-avatar" onerror="this.style.display='none'">`;
+    }
+    
+    let modalHtml = `
+        <div class="claim-status">
+            <div class="claim-status-icon ${resultType}">
+                ${hasClaimed ? '✓' : '✗'}
+            </div>
+            <h2>${hasClaimed ? 'Fees Claimed' : 'No Claims Found'}</h2>
+            <p>
+                ${userAvatarHtml}
+                @${username}${totalClaims > 1 ? ` • ${totalClaims} tokens claimed` : ''}
+            </p>
+        </div>
+    `;
+
+    // Add timing analysis if we have claim data
+    if (hasClaimed && data.claimMetrics) {
+        const metrics = data.claimMetrics;
+        const firstClaimDate = new Date(metrics.firstClaimDate);
+        const lastClaimDate = new Date(metrics.lastClaimDate);
+        
+        // Format dates nicely
+        const formatDate = (date) => {
+            const now = new Date();
+            const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 30) return `${diffDays} days ago`;
+            if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+            return `${Math.floor(diffDays / 365)} years ago`;
+        };
+
+        modalHtml += `
+            <div style="background: rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 1.5rem; margin: 1.5rem 0; border-left: 4px solid #22c55e;">
+                <h3 style="color: #ffffff; margin-bottom: 1rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    📊 Claim Timeline
+                </h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="text-align: center; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px;">
+                        <div style="color: #a0a0a0; font-size: 0.85rem; margin-bottom: 0.25rem;">First Claim</div>
+                        <div style="color: #e5e5e5; font-weight: 600;">${formatDate(firstClaimDate)}</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px;">
+                        <div style="color: #a0a0a0; font-size: 0.85rem; margin-bottom: 0.25rem;">Last Claim</div>
+                        <div style="color: #e5e5e5; font-weight: 600;">${formatDate(lastClaimDate)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    if (hasClaimed && allClaims.length > 0) {
+        // Add tabs
+        modalHtml += `
+            <div class="modal-tabs">
+                <button class="modal-tab active" onclick="switchTab('claims')">Token Claims</button>
+                <button class="modal-tab" onclick="switchTab('creators')">Token Creators</button>
+            </div>
+        `;
+
+        // Claims Tab Content
+        modalHtml += `
+            <div class="tab-content active" id="claims-tab">
+                <div style="margin: 1.5rem 0;">
+                    <strong style="color: #ffffff;">Wallet Address:</strong>
+                    <div class="wallet-display">${walletAddress}</div>
+                </div>
+        `;
+
+        // Display all claims with hover tooltips
+        allClaims.forEach((claim, index) => {
+            const creators = claim.creators || [];
+            
+            let tooltipContent = '';
+            if (creators.length > 0) {
+                tooltipContent = `
+                    <div><strong>Token Creators:</strong></div>
+                    ${creators.slice(0, 3).map(creator => `
+                        <div class="tooltip-creators">
+                            <img src="${creator.pfp}" alt="${creator.username}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiM3Yzc3YzYiLz4KPHBhdGggZD0iTTEyIDEyQzkuNzkgMTIgOCAxMC4yMSA4IDhTOS43OSA0IDEyIDRTMTYgNS43OSAxNiA4UzE0LjIxIDEyIDEyIDEyWk0xMiAxNEMxNi40MiAxNCAyMCAxNS43OSAyMCAyMFYyMkgyVjIwQzIgMTUuNzkgNS41OCAxNCAxMiAxNFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo='">
+                            <span>@${creator.username} (${(creator.royaltyBps / 100).toFixed(1)}%)</span>
+                        </div>
+                    `).join('')}
+                    ${creators.length > 3 ? `<div>+${creators.length - 3} more creators</div>` : ''}
+                `;
+            } else {
+                tooltipContent = '<div>Creator information not available</div>';
+            }
+
+            modalHtml += `
+                <div class="token-info" style="margin-bottom: ${index < allClaims.length - 1 ? '1rem' : '0'};">
+                    <div class="tooltip">${tooltipContent}</div>
+                    
+                    <div class="token-name">${claim.name || 'UNKNOWN'}</div>
+                    <div class="token-details">Token ${index + 1} of ${totalClaims}</div>
+                    
+                    <div class="contract-label">Contract Address</div>
+                    <div class="contract-address">${claim.address || 'Not found'}</div>
+                    
+                    <div style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap;">
+                        ${claim.transaction ? `
+                            <a href="https://solscan.io/tx/${claim.transaction}" target="_blank" class="link-btn" style="font-size: 0.85rem;">
+                                View Transaction
+                            </a>
+                        ` : ''}
+                        <a href="https://bags.fm/${claim.address}" target="_blank" class="link-btn" style="font-size: 0.85rem;">
+                            View on Bags.fm
+                        </a>
+                    </div>
+                </div>
+            `;
+        });
+
+        modalHtml += `</div>`; // Close claims tab
+
+        // Creators Tab Content
+        modalHtml += `
+            <div class="tab-content" id="creators-tab">
+                <div style="margin: 1.5rem 0;">
+                    <h3 style="color: #ffffff; margin-bottom: 1rem;">Token Creators & Royalties</h3>
+        `;
+
+        allClaims.forEach((claim, index) => {
+            const creators = claim.creators || [];
+            
+            modalHtml += `
+                <div style="margin-bottom: 2rem;">
+                    <h4 style="color: #7c77c6; margin-bottom: 1rem;">${claim.name || 'UNKNOWN'} Token</h4>
+                    
+                    ${creators.length > 0 ? creators.map(creator => `
+                        <div class="creator-card">
+                            <img src="${creator.pfp}" alt="${creator.username}" class="creator-avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiM3Yzc3YzYiLz4KPHBhdGggZD0iTTI0IDI0QzIwLjY5IDI0IDE4IDE5LjMxIDE4IDE2UzIwLjY5IDggMjQgOFMyNyAxMC42OSAyNyAxNFMyNC4zMSAyNCAyNCAyNFpNMjQgMjhDMzEuNzMgMjggMzcuMzMgMzEuNTggNDAgMzhIMVY0MEM0LjY3IDMxLjU4IDEyLjI3IDI4IDI0IDI4WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+'">
+                            <div class="creator-info">
+                                <div class="creator-name">${creator.username || 'Anonymous'}</div>
+                                <div class="creator-username">@${creator.twitterUsername || creator.username}</div>
+                            </div>
+                            <div class="creator-royalty">
+                                ${(creator.royaltyBps / 100).toFixed(1)}%
+                                ${creator.isCreator ? '<br><small style="color: #22c55e;">Creator</small>' : ''}
+                            </div>
+                        </div>
+                    `).join('') : `
+                        <div style="text-align: center; padding: 2rem; color: #a0a0a0;">
+                            <p>Creator information not available for this token</p>
+                        </div>
+                    `}
+                </div>
+            `;
+        });
+
+        modalHtml += `</div>`; // Close creators tab
+    } else {
+        modalHtml += `
+            <div style="margin: 1.5rem 0;">
+                <strong style="color: #ffffff;">Wallet Address:</strong>
+                <div class="wallet-display">${walletAddress}</div>
+            </div>
+            <div style="text-align: center; padding: 2rem; background: rgba(255, 255, 255, 0.05); border-radius: 16px; margin: 1.5rem 0;">
+                <p style="color: #e5e5e5; font-size: 1.1rem;">
+                    This user has not claimed any fees from the Bags fee distribution program.
+                </p>
+            </div>
+        `;
+    }
+    
+    modalHtml += `
+        <div style="margin-top: 2rem; display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
+            <a href="https://solscan.io/account/${walletAddress}" target="_blank" class="link-btn">
+                View Wallet on Solscan
+            </a>
+        </div>
+    `;
+
+    showModal(modalHtml, resultType);
+}
+
+        function showModal(content, type) {
+            const modalOverlay = document.getElementById('modalOverlay');
+            const modal = document.getElementById('modal');
+            const modalContent = document.getElementById('modalContent');
+            
+            modalContent.innerHTML = content;
+            modal.className = `modal ${type}`;
+            modalOverlay.style.display = 'flex';
+            
+            // Trigger animation
+            setTimeout(() => {
+                modalOverlay.classList.add('show');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modalOverlay = document.getElementById('modalOverlay');
+            modalOverlay.classList.remove('show');
+            
+            setTimeout(() => {
+                modalOverlay.style.display = 'none';
+            }, 300);
+        }
+
+        // Close modal when clicking overlay
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        function showResult(message, type) {
+            const resultEl = document.getElementById('result');
+            resultEl.innerHTML = message;
+            resultEl.className = `result ${type}`;
+            resultEl.style.display = 'block';
+        }
+
+        // Auto-save username (using memory instead of localStorage for Claude.ai compatibility)
+        let savedUsername = 'Finnbags';
+        const usernameInput = document.getElementById('twitterUsername');
+
+        if (savedUsername) {
+            usernameInput.value = savedUsername;
+        }
+
+        usernameInput.addEventListener('input', () => {
+            savedUsername = usernameInput.value;
+        });
+    // LARP Checker modal functions
+function showLarpModal() {
+    const larpModalOverlay = document.getElementById('larpModalOverlay');
+    larpModalOverlay.style.display = 'flex';
+    
+    setTimeout(() => {
+        larpModalOverlay.classList.add('show');
+        
+        // After modal shows, add blur and coming soon overlay
+        setTimeout(() => {
+            showComingSoonOverlay();
+        }, 300); // Wait for modal animation to complete
+    }, 10);
+}
+
+function showComingSoonOverlay() {
+    // Add blur to the modal content
+    const modal = document.getElementById('larpModal');
+    modal.style.filter = 'blur(3px)';
+    
+    // Create coming soon overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'comingSoonOverlay';
+    overlay.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1002;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    `;
+    
+    const img = document.createElement('img');
+    img.src = 'https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/68945ba3ba8f48b22284d003_COMING-NEXT-07-08-2025.png';
+    img.alt = 'Coming Soon';
+    img.style.cssText = `
+        max-width: 400px;
+        width: 90%;
+        height: auto;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    `;
+    
+    overlay.appendChild(img);
+    document.body.appendChild(overlay);
+    
+    // Fade in the coming soon image
+    setTimeout(() => {
+        overlay.style.opacity = '1';
+    }, 100);
+}
+
+function closeLarpModal() {
+    const larpModalOverlay = document.getElementById('larpModalOverlay');
+    const comingSoonOverlay = document.getElementById('comingSoonOverlay');
+    const modal = document.getElementById('larpModal');
+    
+    // Remove coming soon overlay if it exists
+    if (comingSoonOverlay) {
+        comingSoonOverlay.remove();
+    }
+    
+    // Remove blur
+    modal.style.filter = 'none';
+    
+    larpModalOverlay.classList.remove('show');
+    
+    setTimeout(() => {
+        larpModalOverlay.style.display = 'none';
+    }, 300);
+}
+
+// Close larp modal when clicking overlay
+document.getElementById('larpModalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeLarpModal();
+    }
+});
+
+// LARP form submission
+document.getElementById('larpForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const contractAddress = document.getElementById('contractAddress').value.trim();
+    const loadingEl = document.getElementById('larpLoading');
+    const resultsEl = document.getElementById('larpResults');
+    const submitBtn = document.querySelector('#larpForm button[type="submit"]');
+    
+    if (!contractAddress) {
+        alert('Please enter a contract address');
+        return;
+    }
+
+    loadingEl.style.display = 'block';
+    resultsEl.style.display = 'none';
+    submitBtn.disabled = true;
+
+    try {
+        // Call your LARP analysis API
+        const response = await fetch(`/api/larp-check?contract=${encodeURIComponent(contractAddress)}`);
+        const data = await response.json();
+
+        if (data.success) {
+            displayLarpResults(data);
+        } else {
+            resultsEl.innerHTML = `<div style="color: #ef4444;">Error: ${data.error}</div>`;
+            resultsEl.style.display = 'block';
+        }
+
+    } catch (error) {
+        console.error('LARP check error:', error);
+        resultsEl.innerHTML = `<div style="color: #ef4444;">Analysis failed: ${error.message}</div>`;
+        resultsEl.style.display = 'block';
+    } finally {
+        loadingEl.style.display = 'none';
+        submitBtn.disabled = false;
+    }
+});
+
+function displayLarpResults(data) {
+    const resultsEl = document.getElementById('larpResults');
+    
+    const riskLevel = data.riskScore > 70 ? 'HIGH' : data.riskScore > 40 ? 'MEDIUM' : 'LOW';
+    const riskColor = data.riskScore > 70 ? '#ef4444' : data.riskScore > 40 ? '#f59e0b' : '#22c55e';
+    
+    let resultsHtml = `
+        <div style="background: rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 2rem; margin-bottom: 2rem;">
+            <h3 style="color: ${riskColor}; margin-bottom: 1rem;">
+                Risk Level: ${riskLevel} (${data.riskScore}/100)
+            </h3>
+            <div style="color: #e5e5e5; line-height: 1.6;">
+                ${data.analysis}
+            </div>
+        </div>
+        
+        <div style="background: rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 2rem;">
+            <h4 style="color: #ffffff; margin-bottom: 1rem;">Red Flags Detected:</h4>
+            <ul style="color: #e5e5e5; margin: 0; padding-left: 1.5rem;">
+                ${data.redFlags.map(flag => `<li style="margin: 0.5rem 0;">${flag}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+    
+    resultsEl.innerHTML = resultsHtml;
+    resultsEl.style.display = 'block';
+}
+
+    // About modal functions
+function showAboutModal() {
+    const aboutModalOverlay = document.getElementById('aboutModalOverlay');
+    aboutModalOverlay.style.display = 'flex';
+    
+    setTimeout(() => {
+        aboutModalOverlay.classList.add('show');
+        startCmdAnimation();
+    }, 10);
+}
+
+function closeAboutModal() {
+    const aboutModalOverlay = document.getElementById('aboutModalOverlay');
+    aboutModalOverlay.classList.remove('show');
+    
+    setTimeout(() => {
+        aboutModalOverlay.style.display = 'none';
+        // Reset for next time
+        document.getElementById('cmdOutput').innerHTML = '';
+    }, 300);
+}
+
+// Close about modal when clicking overlay
+document.getElementById('aboutModalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAboutModal();
+    }
+});
+
+function startCmdAnimation() {
+    const output = document.getElementById('cmdOutput');
+    const text = `Welcome to Dev Claim Bags
+
+What is this?
+Dev Claim Bags helps you track developer behavior on Bags.fm. We show you which developers have claimed fees from their tokens.
+
+Why does this matter?
+- Developers who claim fees are more likely to endorse a Bags token
+- Allowing you to get in before the masses or even create a catalyst
+- You can spot potential LARP tokens before investing
+
+Our Features:
+✓ Fee claim detection for any Twitter username
+✓ Multi-token analysis for developers
+✓ Real-time blockchain monitoring
+✓ AI Powered LARP detection system (coming next)
+✓ Telegram notifications (coming soon)
+
+How it works:
+1. Enter a Twitter username
+2. We find their Solana wallet address on Bags
+3. Check if they've claimed fees from Bags tokens
+4. Show you detailed results with token information
+
+The Mission:
+Be ahead of the game. Know which developers are actually involved with their projects before the market catches on.
+
+Built by @DevClaim
+Visit: devclaimbags.fm
+Version: 1.0.0-beta
+
+Stay vigilant. Trade smart.`;
+    
+    let currentChar = 0;
+    
+    function typeNextChar() {
+        if (currentChar < text.length) {
+            output.innerHTML += text[currentChar];
+            currentChar++;
+            setTimeout(typeNextChar, 20); // Smooth typing speed
+        }
+    }
+    
+    typeNextChar();
+}
+    </script>
+</body>
+</html>
