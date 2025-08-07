@@ -58,11 +58,57 @@ class Storage {
   }
 
   async sadd(key, member) {
-    return await this.makeRequest('sadd', key, member);
+    // For Redis sets, we need to send the member as a string, not JSON
+    const url = `${this.baseUrl}/sadd/${encodeURIComponent(key)}`;
+    
+    const options = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify([member]) // Redis SADD expects an array of members
+    };
+
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`Redis SADD failed: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      return result.result;
+    } catch (error) {
+      console.error('Redis SADD error:', error);
+      return null;
+    }
   }
 
   async srem(key, member) {
-    return await this.makeRequest('srem', key, member);
+    // For Redis sets, we need to send the member as a string, not JSON
+    const url = `${this.baseUrl}/srem/${encodeURIComponent(key)}`;
+    
+    const options = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify([member]) // Redis SREM expects an array of members
+    };
+
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`Redis SREM failed: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      return result.result;
+    } catch (error) {
+      console.error('Redis SREM error:', error);
+      return null;
+    }
   }
 
   async smembers(key) {
