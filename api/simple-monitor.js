@@ -238,25 +238,103 @@ async function setLastNotifiedClaims(username, claimAddresses) {
   }
 }
 
-// Export function to add tracked user (for /track command)
+// Store user data with wallet address
+async function storeUserData(username, userData) {
+  try {
+    const REDIS_URL = process.env.KV_REST_API_URL;
+    const REDIS_TOKEN = process.env.KV_REST_API_TOKEN;
+
+    await fetch(`${REDIS_URL}/set/user_data_${username}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${REDIS_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(JSON.stringify(userData))
+    });
+  } catch (error) {
+    console.error('Error storing user data:', error);
+  }
+}
+
+// Get stored user data (including wallet address)
+async function getStoredUserData(username) {
+  try {
+    const REDIS_URL = process.env.KV_REST_API_URL;
+    const REDIS_TOKEN = process.env.KV_REST_API_TOKEN;
+
+    const response = await fetch(`${REDIS_URL}/get/user_data_${username}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${REDIS_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) return null;
+
+    const result = await response.json();
+    return result.result ? JSON.parse(result.result) : null;
+  } catch (error) {
+    console.error('Error getting stored user data:', error);
+    return null;
+  }
+}
+
+// Export function to add tracked user (for /track command) - NOW STORES WALLET
 export async function addTrackedUser(twitterUsername, telegramChatId, telegramUsername) {
-  const users = await getTrackedUsers();
-  
-  // Check if already tracking
-  const exists = users.some(u => 
-    u.twitterUsername === twitterUsername && u.telegramChatId === telegramChatId
-  );
-  
-  if (exists) return false;
-  
-  users.push({
-    twitterUsername,
-    telegramChatId,
-    telegramUsername
-  });
-  
-  await setTrackedUsers(users);
-  return true;
+  try {
+    // Get wallet address ONCE when tracking (only Bags API call needed!)
+    console.log(`🔍 Looking up wallet for @${twitterUsername} to store permanently...`);
+    
+    const walletResponse = await fetch(`https://hg-beta.vercel.app/api/wallet?username=${encodeURIComponent(twitterUsername)}`);
+    
+    if (!walletResponse.ok) {
+      console.log(`❌ Wallet lookup failed for @${twitterUsername}: ${walletResponse.status}`);
+      return false;
+    }
+    
+    const walletData = await walletResponse.json();
+    
+    if (!walletData.success) {
+      console.log(`❌ No wallet found for @${twitterUsername}: ${walletData.error}`);
+      return false;
+    }
+    
+    const walletAddress = walletData.wallet;
+    console.log(`✅ Found wallet for @${twitterUsername}: ${walletAddress} - storing permanently!`);
+    
+    // Store user data with wallet address
+    await storeUserData(twitterUsername, {
+      walletAddress: walletAddress,
+      twitterUsername: twitterUsername,
+      addedAt: new Date().toISOString()
+    });
+    
+    const users = await getTrackedUsers();
+    
+    // Check if already tracking
+    const exists = users.some(u => 
+      u.twitterUsername === twitterUsername && u.telegramChatId === telegramChatId
+    );
+    
+    if (exists) return false;
+    
+    users.push({
+      twitterUsername,
+      telegramChatId,
+      telegramUsername,
+      walletAddress: walletAddress // Store wallet in user record too
+    });
+    
+    await setTrackedUsers(users);
+    console.log(`✅ Successfully added @${twitterUsername} with stored wallet ${walletAddress}`);
+    return true;
+    
+  } catch (error) {
+    console.error('Error adding tracked user:', error);
+    return false;
+  }
 }
 
 // Export function to remove tracked user
