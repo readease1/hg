@@ -130,7 +130,7 @@ async function getTrackedUsers() {
     });
 
     if (!response.ok) {
-      // Return default tracking for now
+      console.log('Redis GET failed, returning default users');
       return [{
         twitterUsername: "abIenessy",
         telegramChatId: 7259480190,
@@ -139,13 +139,36 @@ async function getTrackedUsers() {
     }
 
     const result = await response.json();
-    const users = result.result ? JSON.parse(result.result) : [];
+    console.log('Redis GET result:', result);
     
-    return users.length > 0 ? users : [{
-      twitterUsername: "abIenessy", 
-      telegramChatId: 7259480190,
-      telegramUsername: "dev714"
-    }];
+    let users = [];
+    
+    if (result.result && result.result !== null) {
+      try {
+        users = JSON.parse(result.result);
+        // Ensure it's an array
+        if (!Array.isArray(users)) {
+          console.log('Users is not an array, resetting to empty array');
+          users = [];
+        }
+      } catch (parseError) {
+        console.log('JSON parse error:', parseError);
+        users = [];
+      }
+    }
+    
+    // If empty, add default user
+    if (users.length === 0) {
+      users = [{
+        twitterUsername: "abIenessy",
+        telegramChatId: 7259480190,
+        telegramUsername: "dev714"
+      }];
+    }
+    
+    console.log('Final users array:', users);
+    return users;
+    
   } catch (error) {
     console.error('Error getting tracked users:', error);
     return [{
