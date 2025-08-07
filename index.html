@@ -1106,42 +1106,17 @@ body::before {
         </div>
     `;
 
-    // Add timing analysis if we have claim data
-    if (hasClaimed && data.claimMetrics) {
-        const metrics = data.claimMetrics;
-        const firstClaimDate = new Date(metrics.firstClaimDate);
-        const lastClaimDate = new Date(metrics.lastClaimDate);
+    // Helper function to format dates
+    const formatDate = (date) => {
+        const now = new Date();
+        const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
         
-        // Format dates nicely
-        const formatDate = (date) => {
-            const now = new Date();
-            const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-            
-            if (diffDays === 0) return 'Today';
-            if (diffDays === 1) return 'Yesterday';
-            if (diffDays < 30) return `${diffDays} days ago`;
-            if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
-            return `${Math.floor(diffDays / 365)} years ago`;
-        };
-
-        modalHtml += `
-            <div style="background: rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 1.5rem; margin: 1.5rem 0; border-left: 4px solid #22c55e;">
-                <h3 style="color: #ffffff; margin-bottom: 1rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
-                    📊 Claim Timeline
-                </h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div style="text-align: center; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px;">
-                        <div style="color: #a0a0a0; font-size: 0.85rem; margin-bottom: 0.25rem;">First Claim</div>
-                        <div style="color: #e5e5e5; font-weight: 600;">${formatDate(firstClaimDate)}</div>
-                    </div>
-                    <div style="text-align: center; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px;">
-                        <div style="color: #a0a0a0; font-size: 0.85rem; margin-bottom: 0.25rem;">Last Claim</div>
-                        <div style="color: #e5e5e5; font-weight: 600;">${formatDate(lastClaimDate)}</div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
+        if (diffDays === 0) return 'Today';
+        if (diffDays === 1) return 'Yesterday';
+        if (diffDays < 30) return `${diffDays} days ago`;
+        if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+        return `${Math.floor(diffDays / 365)} years ago`;
+    };
 
     if (hasClaimed && allClaims.length > 0) {
         // Add tabs
@@ -1157,11 +1132,11 @@ body::before {
             <div class="tab-content active" id="claims-tab">
                 <div style="margin: 1.5rem 0;">
                     <strong style="color: #ffffff;">Wallet Address:</strong>
-                    <div class="wallet-display">${walletAddress}</div>
+                    <div class="wallet-display" onclick="copyToClipboard('${walletAddress}', this)" style="cursor: pointer; text-align: center; font-weight: 700;" title="Click to copy">${walletAddress}</div>
                 </div>
         `;
 
-        // Display all claims with hover tooltips
+        // Display all claims with timing data for each token
         allClaims.forEach((claim, index) => {
             const creators = claim.creators || [];
             
@@ -1181,6 +1156,29 @@ body::before {
                 tooltipContent = '<div>Creator information not available</div>';
             }
 
+            // Get timing data - for now show overall timing since we need to implement per-token timing tracking
+            let claimTiming = '';
+            if (data.claimMetrics) {
+                const firstClaimDate = new Date(data.claimMetrics.firstClaimDate);
+                const lastClaimDate = new Date(data.claimMetrics.lastClaimDate);
+                
+                claimTiming = `
+                    <div style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 1rem; margin: 1rem 0;">
+                        <div style="color: #ffffff; font-weight: 600; margin-bottom: 0.75rem;">Claim Timeline</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                            <div style="text-align: center; padding: 0.75rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
+                                <div style="color: #a0a0a0; font-size: 0.8rem; margin-bottom: 0.25rem;">First Claim</div>
+                                <div style="color: #e5e5e5; font-weight: 600; font-size: 0.9rem;">${formatDate(firstClaimDate)}</div>
+                            </div>
+                            <div style="text-align: center; padding: 0.75rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
+                                <div style="color: #a0a0a0; font-size: 0.8rem; margin-bottom: 0.25rem;">Latest Claim</div>
+                                <div style="color: #e5e5e5; font-weight: 600; font-size: 0.9rem;">${formatDate(lastClaimDate)}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
             modalHtml += `
                 <div class="token-info" style="margin-bottom: ${index < allClaims.length - 1 ? '1rem' : '0'};">
                     <div class="tooltip">${tooltipContent}</div>
@@ -1188,8 +1186,10 @@ body::before {
                     <div class="token-name">${claim.name || 'UNKNOWN'}</div>
                     <div class="token-details">Token ${index + 1} of ${totalClaims}</div>
                     
+                    ${claimTiming}
+                    
                     <div class="contract-label">Contract Address</div>
-                    <div class="contract-address">${claim.address || 'Not found'}</div>
+                    <div class="contract-address" onclick="copyToClipboard('${claim.address}', this)" style="cursor: pointer;" title="Click to copy">${claim.address || 'Not found'}</div>
                     
                     <div style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap;">
                         ${claim.transaction ? `
@@ -1247,7 +1247,7 @@ body::before {
         modalHtml += `
             <div style="margin: 1.5rem 0;">
                 <strong style="color: #ffffff;">Wallet Address:</strong>
-                <div class="wallet-display">${walletAddress}</div>
+                <div class="wallet-display" onclick="copyToClipboard('${walletAddress}', this)" style="cursor: pointer; text-align: center; font-weight: 700;" title="Click to copy">${walletAddress}</div>
             </div>
             <div style="text-align: center; padding: 2rem; background: rgba(255, 255, 255, 0.05); border-radius: 16px; margin: 1.5rem 0;">
                 <p style="color: #e5e5e5; font-size: 1.1rem;">
@@ -1546,6 +1546,26 @@ Stay vigilant. Trade smart.`;
     }
     
     typeNextChar();
+}
+
+    function copyToClipboard(text, element) {
+    navigator.clipboard.writeText(text).then(() => {
+        // Show feedback
+        const originalText = element.innerHTML;
+        element.innerHTML = 'Copied!';
+        element.style.background = 'rgba(34, 197, 94, 0.2)';
+        element.style.borderLeft = '4px solid #22c55e';
+        element.style.borderRight = '4px solid #22c55e';
+        
+        setTimeout(() => {
+            element.innerHTML = originalText;
+            element.style.background = 'rgba(255, 255, 255, 0.05)';
+            element.style.borderLeft = '3px solid #22c55e';
+            element.style.borderRight = '3px solid #22c55e';
+        }, 1000);
+    }).catch(err => {
+        console.error('Could not copy text: ', err);
+    });
 }
     </script>
 </body>
