@@ -1346,11 +1346,6 @@ function showLarpModal() {
     
     setTimeout(() => {
         larpModalOverlay.classList.add('show');
-        
-        // After modal shows, add blur and coming soon overlay
-        setTimeout(() => {
-            showComingSoonOverlay();
-        }, 300); // Wait for modal animation to complete
     }, 10);
 }
 
