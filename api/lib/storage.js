@@ -47,11 +47,11 @@ class Storage {
   }
 
   async sadd(key, member) {
-    return await this.makeRequest('sadd', key, [member]);
+    return await this.makeRequest('sadd', key, member);
   }
 
   async srem(key, member) {
-    return await this.makeRequest('srem', key, [member]);
+    return await this.makeRequest('srem', key, member);
   }
 
   async smembers(key) {
