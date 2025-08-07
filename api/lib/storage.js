@@ -17,7 +17,8 @@ class Storage {
     };
 
     if (data !== null) {
-      options.body = JSON.stringify(data);
+      // For Redis REST API, we need to send the data directly, not JSON.stringify it again
+      options.body = typeof data === 'string' ? JSON.stringify(data) : JSON.stringify(data);
     }
 
     try {
@@ -27,6 +28,16 @@ class Storage {
       }
       
       const result = await response.json();
+      
+      // Parse JSON strings back to objects
+      if (typeof result.result === 'string' && (result.result.startsWith('{') || result.result.startsWith('['))) {
+        try {
+          return JSON.parse(result.result);
+        } catch {
+          return result.result;
+        }
+      }
+      
       return result.result;
     } catch (error) {
       console.error('Redis request error:', error);
@@ -174,6 +185,8 @@ class Storage {
     try {
       const userKey = `user:${userId}`;
       const userData = await this.get(userKey);
+      
+      console.log(`Getting wallets for user ${userId}:`, userData);
       
       if (!userData || !userData.wallets) {
         return [];
