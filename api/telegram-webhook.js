@@ -65,6 +65,10 @@ async function handleMessage(message, botToken) {
       case '/help':
         await sendHelpMessage(chatId, botToken);
         break;
+
+        case '/whoami':
+  await sendMessage(chatId, `Your Telegram User ID: \`${userId}\`\nChat ID: \`${chatId}\`\nUsername: @${username}`, botToken);
+  break;
         
       default:
         await sendMessage(chatId, '❓ Unknown command. Use /help to see available commands.', botToken);
