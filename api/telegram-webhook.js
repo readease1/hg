@@ -120,30 +120,30 @@ async function sendHelpMessage(chatId, botToken) {
 
 async function handleTrackCommand(chatId, botToken, args, userId, username) {
   if (args.length === 0) {
-    await sendMessage(chatId, '❌ Please provide a wallet address.\n\nExample: `/track 2FvFYLpFdAJnRbN2MC5QXYe975kki8L5SwN66SxyhBpx`', botToken);
+    await sendMessage(chatId, '❌ Please provide a Twitter username.\n\nExample: `/track dev714`', botToken);
     return;
   }
 
-  const walletAddress = args[0];
+  const targetUsername = args[0].replace('@', ''); // Remove @ if they include it
   
-  // Basic wallet address validation
-  if (!isValidSolanaAddress(walletAddress)) {
-    await sendMessage(chatId, '❌ Invalid Solana wallet address. Please check and try again.', botToken);
+  // Basic username validation (no special characters except underscore)
+  if (!isValidTwitterUsername(targetUsername)) {
+    await sendMessage(chatId, '❌ Invalid Twitter username. Please check and try again.\n\nExample: `/track dev714`', botToken);
     return;
   }
 
   try {
-    // Add wallet to user's tracking list
-    const added = await storage.addTrackedWallet(userId, username, chatId, walletAddress);
+    // Add username to user's tracking list
+    const added = await storage.addTrackedUsername(userId, username, chatId, targetUsername);
     
     if (added) {
-      await sendMessage(chatId, `✅ Now tracking wallet:\n\`${walletAddress}\`\n\nYou'll receive alerts when this wallet claims fees!`, botToken);
+      await sendMessage(chatId, `✅ Now tracking Twitter user:\n@${targetUsername}\n\nYou'll receive alerts when this user claims fees!`, botToken);
     } else {
-      await sendMessage(chatId, `ℹ️ Already tracking wallet:\n\`${walletAddress}\``, botToken);
+      await sendMessage(chatId, `ℹ️ Already tracking Twitter user:\n@${targetUsername}`, botToken);
     }
   } catch (error) {
-    console.error('Error adding wallet:', error);
-    await sendMessage(chatId, '❌ Error adding wallet to tracking list. Please try again.', botToken);
+    console.error('Error adding username:', error);
+    await sendMessage(chatId, '❌ Error adding username to tracking list. Please try again.', botToken);
   }
 }
 
@@ -240,10 +240,10 @@ async function sendMessage(chatId, text, botToken, options = {}) {
   }
 }
 
-function isValidSolanaAddress(address) {
-  // Basic Solana address validation
-  return typeof address === 'string' && 
-         address.length >= 32 && 
-         address.length <= 44 && 
-         /^[1-9A-HJ-NP-Za-km-z]+$/.test(address);
+function isValidTwitterUsername(username) {
+  // Twitter username validation: 1-15 characters, letters, numbers, underscore only
+  return typeof username === 'string' && 
+         username.length >= 1 && 
+         username.length <= 15 && 
+         /^[a-zA-Z0-9_]+$/.test(username);
 }
