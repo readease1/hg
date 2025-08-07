@@ -1,4 +1,4 @@
-// Simple monitoring that actually works
+// Simple monitoring that actually works - No duplicate alerts
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -10,15 +10,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Hardcode what you want to track for now
-    const trackedUsers = [
-      {
-        twitterUsername: "abIenessy",
-        telegramChatId: 7259480190, // Your chat ID
-        telegramUsername: "dev714"
-      }
-      // Add more users here as needed
-    ];
+    // Get tracked users from storage instead of hardcoding
+    const trackedUsers = await getTrackedUsers();
 
     let alertsSent = 0;
     let claimsFound = 0;
@@ -40,20 +33,24 @@ export default async function handler(req, res) {
         const activityData = await activityResponse.json();
 
         if (activityData.hasInteracted && activityData.allClaims) {
-          // Check if this is a new claim (simple timestamp check)
-          const lastNotified = await getLastNotified(user.twitterUsername);
-          const latestClaimTime = activityData.claimMetrics?.lastClaimDate ? 
-            new Date(activityData.claimMetrics.lastClaimDate).getTime() : 0;
+          // Check for new claims only
+          const lastNotifiedClaims = await getLastNotifiedClaims(user.twitterUsername);
+          const newClaims = activityData.allClaims.filter(claim => 
+            !lastNotifiedClaims.includes(claim.address)
+          );
 
-          if (latestClaimTime > lastNotified) {
-            // New claim found!
-            claimsFound++;
+          if (newClaims.length > 0) {
+            claimsFound += newClaims.length;
             
-            const sent = await sendAlert(user, walletData.wallet, activityData);
-            if (sent) {
-              alertsSent++;
-              await setLastNotified(user.twitterUsername, latestClaimTime);
+            // Send alert for each new claim
+            for (const claim of newClaims) {
+              const sent = await sendAlert(user, walletData.wallet, claim, activityData);
+              if (sent) alertsSent++;
             }
+            
+            // Update notified claims
+            const allClaimAddresses = activityData.allClaims.map(c => c.address);
+            await setLastNotifiedClaims(user.twitterUsername, allClaimAddresses);
           }
         }
       } catch (error) {
@@ -73,10 +70,12 @@ export default async function handler(req, res) {
   }
 }
 
-async function sendAlert(user, wallet, activityData) {
+async function sendAlert(user, wallet, claim, activityData) {
   const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
   
   const shortWallet = `${wallet.slice(0, 8)}...${wallet.slice(-8)}`;
+  const shortToken = claim.address ? `${claim.address.slice(0, 8)}...${claim.address.slice(-8)}` : 'Unknown';
+  
   const claimTime = activityData.claimMetrics?.lastClaimDate ? 
     new Date(activityData.claimMetrics.lastClaimDate).toLocaleString('en-GB', {
       day: 'numeric',
@@ -90,12 +89,13 @@ async function sendAlert(user, wallet, activityData) {
 
 👤 User: @${user.twitterUsername}
 💰 Wallet: \`${shortWallet}\`
-🪙 Tokens: ${activityData.totalClaims} claimed
+🪙 Token: \`${shortToken}\`
 ⏰ Time: ${claimTime}
 
-🔗 [View Wallet](https://solscan.io/account/${wallet})
+🔗 [View Transaction](https://solscan.io/tx/${claim.transaction})
+🔍 [View Wallet](https://solscan.io/account/${wallet})
 
-_Simple monitoring works!_`;
+_Tracked for @${user.telegramUsername}_`;
 
   try {
     const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -115,15 +115,144 @@ _Simple monitoring works!_`;
   }
 }
 
-// Simple timestamp storage using environment or fallback
-async function getLastNotified(username) {
-  // For now, just return 0 to catch all claims
-  // In production, you'd store this somewhere simple
-  return 0;
+// Simple storage using Redis (much simpler than before)
+async function getTrackedUsers() {
+  try {
+    const REDIS_URL = process.env.KV_REST_API_URL;
+    const REDIS_TOKEN = process.env.KV_REST_API_TOKEN;
+
+    const response = await fetch(`${REDIS_URL}/get/simple_tracked_users`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${REDIS_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      // Return default tracking for now
+      return [{
+        twitterUsername: "abIenessy",
+        telegramChatId: 7259480190,
+        telegramUsername: "dev714"
+      }];
+    }
+
+    const result = await response.json();
+    const users = result.result ? JSON.parse(result.result) : [];
+    
+    return users.length > 0 ? users : [{
+      twitterUsername: "abIenessy", 
+      telegramChatId: 7259480190,
+      telegramUsername: "dev714"
+    }];
+  } catch (error) {
+    console.error('Error getting tracked users:', error);
+    return [{
+      twitterUsername: "abIenessy",
+      telegramChatId: 7259480190, 
+      telegramUsername: "dev714"
+    }];
+  }
 }
 
-async function setLastNotified(username, timestamp) {
-  // For now, do nothing
-  // In production, you'd store this somewhere simple
+async function setTrackedUsers(users) {
+  try {
+    const REDIS_URL = process.env.KV_REST_API_URL;
+    const REDIS_TOKEN = process.env.KV_REST_API_TOKEN;
+
+    await fetch(`${REDIS_URL}/set/simple_tracked_users`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${REDIS_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(JSON.stringify(users))
+    });
+  } catch (error) {
+    console.error('Error setting tracked users:', error);
+  }
+}
+
+async function getLastNotifiedClaims(username) {
+  try {
+    const REDIS_URL = process.env.KV_REST_API_URL;
+    const REDIS_TOKEN = process.env.KV_REST_API_TOKEN;
+
+    const response = await fetch(`${REDIS_URL}/get/notified_${username}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${REDIS_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) return [];
+
+    const result = await response.json();
+    return result.result ? JSON.parse(result.result) : [];
+  } catch (error) {
+    console.error('Error getting notified claims:', error);
+    return [];
+  }
+}
+
+async function setLastNotifiedClaims(username, claimAddresses) {
+  try {
+    const REDIS_URL = process.env.KV_REST_API_URL;
+    const REDIS_TOKEN = process.env.KV_REST_API_TOKEN;
+
+    await fetch(`${REDIS_URL}/set/notified_${username}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${REDIS_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(JSON.stringify(claimAddresses))
+    });
+  } catch (error) {
+    console.error('Error setting notified claims:', error);
+  }
+}
+
+// Export function to add tracked user (for /track command)
+export async function addTrackedUser(twitterUsername, telegramChatId, telegramUsername) {
+  const users = await getTrackedUsers();
+  
+  // Check if already tracking
+  const exists = users.some(u => 
+    u.twitterUsername === twitterUsername && u.telegramChatId === telegramChatId
+  );
+  
+  if (exists) return false;
+  
+  users.push({
+    twitterUsername,
+    telegramChatId,
+    telegramUsername
+  });
+  
+  await setTrackedUsers(users);
   return true;
+}
+
+// Export function to remove tracked user
+export async function removeTrackedUser(twitterUsername, telegramChatId) {
+  const users = await getTrackedUsers();
+  const filteredUsers = users.filter(u => 
+    !(u.twitterUsername === twitterUsername && u.telegramChatId === telegramChatId)
+  );
+  
+  if (filteredUsers.length === users.length) return false;
+  
+  await setTrackedUsers(filteredUsers);
+  return true;
+}
+
+// Export function to get user's tracked usernames
+export async function getUserTrackedUsernames(telegramChatId) {
+  const users = await getTrackedUsers();
+  return users
+    .filter(u => u.telegramChatId === telegramChatId)
+    .map(u => u.twitterUsername);
 }
