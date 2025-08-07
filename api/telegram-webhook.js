@@ -1,8 +1,7 @@
-// /api/telegram-webhook.js - Handle incoming Telegram messages (Updated for Username Tracking)
-import { storage } from './lib/storage.js';
+// /api/telegram-webhook.js - Simple tracking version
+import { addTrackedUser, removeTrackedUser, getUserTrackedUsernames } from './simple-monitor.js';
 
 export default async function handler(req, res) {
-  // Only accept POST requests from Telegram
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -16,14 +15,8 @@ export default async function handler(req, res) {
   try {
     const update = req.body;
     
-    // Handle regular messages
     if (update.message) {
       await handleMessage(update.message, TELEGRAM_BOT_TOKEN);
-    }
-    
-    // Handle callback queries (inline button clicks)
-    if (update.callback_query) {
-      await handleCallbackQuery(update.callback_query, TELEGRAM_BOT_TOKEN);
     }
 
     res.status(200).json({ ok: true });
@@ -41,7 +34,6 @@ async function handleMessage(message, botToken) {
 
   console.log(`📱 Message from @${username} (${userId}): ${text}`);
 
-  // Handle commands
   if (text.startsWith('/')) {
     const [command, ...args] = text.split(' ');
     
@@ -55,7 +47,7 @@ async function handleMessage(message, botToken) {
         break;
         
       case '/untrack':
-        await handleUntrackCommand(chatId, botToken, args, userId);
+        await handleUntrackCommand(chatId, botToken, args, userId, username);
         break;
         
       case '/list':
@@ -74,7 +66,6 @@ async function handleMessage(message, botToken) {
         await sendMessage(chatId, '❓ Unknown command. Use /help to see available commands.', botToken);
     }
   } else {
-    // Handle non-command messages
     await sendMessage(chatId, 'Send /help to see available commands.', botToken);
   }
 }
@@ -125,22 +116,35 @@ async function handleTrackCommand(chatId, botToken, args, userId, username) {
     return;
   }
 
-  const targetUsername = args[0].replace('@', ''); // Remove @ if they include it
+  const targetUsername = args[0].replace('@', '');
   
-  // Basic username validation
   if (!isValidTwitterUsername(targetUsername)) {
     await sendMessage(chatId, '❌ Invalid Twitter username. Please check and try again.\n\nExample: `/track dev714`', botToken);
     return;
   }
 
   try {
-    // Add username to user's tracking list
-    const added = await storage.addTrackedUsername(userId, username, chatId, targetUsername);
+    // Test if user exists in Bags system first
+    const walletResponse = await fetch(`https://hg-beta.vercel.app/api/wallet?username=${targetUsername}`);
+    
+    if (!walletResponse.ok) {
+      await sendMessage(chatId, `❌ Unable to check @${targetUsername}. Please try again later.`, botToken);
+      return;
+    }
+    
+    const walletData = await walletResponse.json();
+    
+    if (!walletData.success) {
+      await sendMessage(chatId, `❌ @${targetUsername} not found in Bags system. They need to have created tokens on Bags.fm to be trackable.`, botToken);
+      return;
+    }
+
+    const added = await addTrackedUser(targetUsername, chatId, username);
     
     if (added) {
-      await sendMessage(chatId, `✅ Now tracking Twitter user:\n@${targetUsername}\n\nYou'll receive alerts when this user claims fees!`, botToken);
+      await sendMessage(chatId, `✅ Now tracking Twitter user: @${targetUsername}\n\nYou'll receive alerts when they claim fees!\n\n💰 Wallet: \`${walletData.wallet.slice(0, 8)}...${walletData.wallet.slice(-8)}\``, botToken);
     } else {
-      await sendMessage(chatId, `ℹ️ Already tracking Twitter user:\n@${targetUsername}`, botToken);
+      await sendMessage(chatId, `ℹ️ Already tracking: @${targetUsername}`, botToken);
     }
   } catch (error) {
     console.error('Error adding username:', error);
@@ -148,7 +152,7 @@ async function handleTrackCommand(chatId, botToken, args, userId, username) {
   }
 }
 
-async function handleUntrackCommand(chatId, botToken, args, userId) {
+async function handleUntrackCommand(chatId, botToken, args, userId, username) {
   if (args.length === 0) {
     await sendMessage(chatId, '❌ Please provide a Twitter username to untrack.\n\nExample: `/untrack dev714`', botToken);
     return;
@@ -157,57 +161,41 @@ async function handleUntrackCommand(chatId, botToken, args, userId) {
   const targetUsername = args[0].replace('@', '');
 
   try {
-    const removed = await storage.removeTrackedUsername(userId, targetUsername);
+    const removed = await removeTrackedUser(targetUsername, chatId);
     
     if (removed) {
-      await sendMessage(chatId, `✅ Stopped tracking Twitter user:\n@${targetUsername}`, botToken);
+      await sendMessage(chatId, `✅ Stopped tracking: @${targetUsername}`, botToken);
     } else {
-      await sendMessage(chatId, `ℹ️ Twitter user not in your tracking list:\n@${targetUsername}`, botToken);
+      await sendMessage(chatId, `ℹ️ @${targetUsername} not in your tracking list.`, botToken);
     }
   } catch (error) {
     console.error('Error removing username:', error);
-    await sendMessage(chatId, '❌ Error removing username from tracking list. Please try again.', botToken);
+    await sendMessage(chatId, '❌ Error removing username. Please try again.', botToken);
   }
 }
 
 async function handleListCommand(chatId, botToken, userId) {
   try {
-    const usernames = await storage.getUserTrackedUsernames(userId);
+    const usernames = await getUserTrackedUsernames(chatId);
     
     if (usernames.length === 0) {
-      await sendMessage(chatId, '📭 You are not tracking any Twitter users yet.\n\nUse /track <username> to start tracking!', botToken);
+      await sendMessage(chatId, '📭 You are not tracking any users yet.\n\nUse /track <username> to start tracking!', botToken);
       return;
     }
 
-    let message = `📋 **Your Tracked Twitter Users (${usernames.length}):**\n\n`;
+    let message = `📋 **Your Tracked Users (${usernames.length}):**\n\n`;
     
     usernames.forEach((username, index) => {
       message += `${index + 1}. @${username}\n`;
     });
     
-    message += `\nUse /untrack <username> to stop tracking a user.`;
+    message += `\nUse /untrack <username> to stop tracking.`;
     
     await sendMessage(chatId, message, botToken);
   } catch (error) {
     console.error('Error listing usernames:', error);
-    await sendMessage(chatId, '❌ Error retrieving your tracked users. Please try again.', botToken);
+    await sendMessage(chatId, '❌ Error retrieving tracked users. Please try again.', botToken);
   }
-}
-
-async function handleCallbackQuery(callbackQuery, botToken) {
-  // Handle inline keyboard button clicks (for future features)
-  const chatId = callbackQuery.message.chat.id;
-  const data = callbackQuery.data;
-  
-  // Acknowledge the callback query
-  await fetch(`https://api.telegram.org/bot${botToken}/answerCallbackQuery`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      callback_query_id: callbackQuery.id,
-      text: 'Processing...'
-    })
-  });
 }
 
 async function sendMessage(chatId, text, botToken, options = {}) {
@@ -241,7 +229,6 @@ async function sendMessage(chatId, text, botToken, options = {}) {
 }
 
 function isValidTwitterUsername(username) {
-  // Twitter username validation: 1-15 characters, letters, numbers, underscore only
   return typeof username === 'string' && 
          username.length >= 1 && 
          username.length <= 15 && 
