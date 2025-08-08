@@ -123,8 +123,8 @@ async function handleList(chatId, botToken, userId) {
     
     let message = `📋 Your tracked users (${trackings.length}):\n\n`;
     trackings.forEach((tracking, index) => {
-      const shortWallet = `${tracking.walletAddress.slice(0, 6)}...${tracking.walletAddress.slice(-6)}`;
-      message += `${index + 1}. @${tracking.targetUsername}\n   💰 ${shortWallet}\n\n`;
+      // Show full wallet address in monospace for easy copying
+      message += `${index + 1}. @${tracking.targetUsername}\n💰 \`${tracking.walletAddress}\`\n\n`;
     });
     
     await sendMessage(chatId, message, botToken);
